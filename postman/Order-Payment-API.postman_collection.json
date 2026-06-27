@@ -1,0 +1,1473 @@
+{
+  "info": {
+    "name": "Order Payment API",
+    "description": "Extendable Order and Payment Management API with JWT authentication.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register (Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\"\n    },\n    \"token\": \"<jwt-token>\",\n    \"token_type\": \"bearer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Duplicate Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/register",
+            "description": "Register the same email twice. The second request should fail."
+          },
+          "response": [
+            {
+              "name": "422 Email Already Registered",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"This email address is already registered.\",\n    \"details\": [\n      {\n        \"field\": \"email\",\n        \"message\": \"This email address is already registered.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Weak Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "422 Weak Password",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Password must include both uppercase and lowercase letters.\",\n    \"details\": [\n      {\n        \"field\": \"password\",\n        \"message\": \"Password must include both uppercase and lowercase letters.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Password Mismatch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password2\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "422 Password Mismatch",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"The password confirmation does not match.\",\n    \"details\": [\n      {\n        \"field\": \"password\",\n        \"message\": \"The password confirmation does not match.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Invalid Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"not-an-email\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "422 Invalid Email",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter a valid email address.\",\n    \"details\": [\n      {\n        \"field\": \"email\",\n        \"message\": \"Please enter a valid email address.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Multiple Validation Errors)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"bad-email\",\n  \"password\": \"short\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "422 Multiple Errors",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"The given data was invalid. Please review the field errors below.\",\n    \"details\": [\n      {\n        \"field\": \"name\",\n        \"message\": \"Please enter your full name.\"\n      },\n      {\n        \"field\": \"email\",\n        \"message\": \"Please enter a valid email address.\"\n      },\n      {\n        \"field\": \"password\",\n        \"message\": \"Password must be at least 8 characters long.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Missing Name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/register"
+          },
+          "response": [
+            {
+              "name": "422 Missing Name",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter your full name.\",\n    \"details\": [\n      {\n        \"field\": \"name\",\n        \"message\": \"Please enter your full name.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"token\": \"<jwt-token>\",\n    \"token_type\": \"bearer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Wrong Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"missing@example.com\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"INVALID_CREDENTIALS\",\n    \"message\": \"The email or password you entered is incorrect.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Wrong Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"WrongPass1\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"INVALID_CREDENTIALS\",\n    \"message\": \"The email or password you entered is incorrect.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Validation Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          },
+          "response": [
+            {
+              "name": "422 Validation Failed",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter a valid email address.\",\n    \"details\": [\n      {\n        \"field\": \"email\",\n        \"message\": \"Please enter a valid email address.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Missing Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          },
+          "response": [
+            {
+              "name": "422 Missing Password",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter your password.\",\n    \"details\": [\n      {\n        \"field\": \"password\",\n        \"message\": \"Please enter your password.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (Rate Limited)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/login",
+            "description": "Send more than 5 login requests per minute from the same IP to trigger rate limiting."
+          },
+          "response": [
+            {
+              "name": "429 Too Many Requests",
+              "status": "Too Many Requests",
+              "code": 429,
+              "body": "{\n  \"error\": {\n    \"code\": \"TOO_MANY_REQUESTS\",\n    \"message\": \"Too many requests. Please slow down and try again later.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders?status=pending&per_page=15"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"customer_name\": \"Alice Smith\",\n      \"customer_email\": \"alice@example.com\",\n      \"status\": \"pending\",\n      \"total\": \"1050.99\",\n      \"items\": [\n        {\n          \"id\": 1,\n          \"product_name\": \"Laptop\",\n          \"quantity\": 1,\n          \"price\": \"999.99\",\n          \"subtotal\": \"999.99\"\n        }\n      ],\n      \"payments_count\": 0,\n      \"created_at\": \"2026-06-26T13:17:52.000000Z\",\n      \"updated_at\": \"2026-06-26T13:17:52.000000Z\"\n    }\n  ],\n  \"links\": {\n    \"first\": \"http://localhost:8000/api/v1/orders?page=1\",\n    \"last\": \"http://localhost:8000/api/v1/orders?page=1\",\n    \"prev\": [],\n    \"next\": []\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"from\": 1,\n    \"last_page\": 1,\n    \"path\": \"http://localhost:8000/api/v1/orders\",\n    \"per_page\": 15,\n    \"to\": 1,\n    \"total\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Empty)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders?per_page=15"
+          },
+          "response": [
+            {
+              "name": "200 OK - No Orders",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [],\n  \"links\": {\n    \"first\": \"http://localhost:8000/api/v1/orders?page=1\",\n    \"last\": \"http://localhost:8000/api/v1/orders?page=1\",\n    \"prev\": [],\n    \"next\": []\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"from\": [],\n    \"last_page\": 1,\n    \"path\": \"http://localhost:8000/api/v1/orders\",\n    \"per_page\": 15,\n    \"to\": [],\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Invalid Status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders?status=invalid"
+          },
+          "response": [
+            {
+              "name": "422 Invalid Status Filter",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please use a valid order status: pending, confirmed, or cancelled.\",\n    \"details\": [\n      {\n        \"field\": \"status\",\n        \"message\": \"Please use a valid order status: pending, confirmed, or cancelled.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Invalid per_page)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders?per_page=0"
+          },
+          "response": [
+            {
+              "name": "422 Invalid per_page",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Results per page must be at least 1.\",\n    \"details\": [\n      {\n        \"field\": \"per_page\",\n        \"message\": \"Results per page must be at least 1.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Invalid page)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders?page=0"
+          },
+          "response": [
+            {
+              "name": "422 Invalid page",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Page number must be at least 1.\",\n    \"details\": [\n      {\n        \"field\": \"page\",\n        \"message\": \"Page number must be at least 1.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Unauthenticated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"You are not signed in. Please log in or create an account to access this resource.\",\n    \"details\": [\n      {\n        \"field\": \"login\",\n        \"message\": \"Send a POST request to /api/v1/auth/login with your email and password.\"\n      },\n      {\n        \"field\": \"register\",\n        \"message\": \"If you do not have an account yet, use POST /api/v1/auth/register first.\"\n      },\n      {\n        \"field\": \"authorization\",\n        \"message\": \"After login, copy the token from the response and add this header: Authorization: Bearer {your-token}.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Alice Smith\",\n  \"customer_email\": \"alice@example.com\",\n  \"items\": [\n    {\n      \"product_name\": \"Laptop\",\n      \"quantity\": 1,\n      \"price\": 999.99\n    },\n    {\n      \"product_name\": \"Mouse\",\n      \"quantity\": 2,\n      \"price\": 25.50\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"customer_name\": \"Alice Smith\",\n    \"customer_email\": \"alice@example.com\",\n    \"status\": \"pending\",\n    \"total\": \"1050.99\",\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_name\": \"Laptop\",\n        \"quantity\": 1,\n        \"price\": \"999.99\",\n        \"subtotal\": \"999.99\"\n      },\n      {\n        \"id\": 2,\n        \"product_name\": \"Mouse\",\n        \"quantity\": 2,\n        \"price\": \"25.50\",\n        \"subtotal\": \"51.00\"\n      }\n    ],\n    \"created_at\": \"2026-06-26T13:17:52.000000Z\",\n    \"updated_at\": \"2026-06-26T13:17:52.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (Missing Item Quantity)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Alice Smith\",\n  \"customer_email\": \"alice@example.com\",\n  \"items\": [\n    {\n      \"product_name\": \"Laptop\",\n      \"price\": 999.99\n    },\n    {\n      \"product_name\": \"Mouse\",\n      \"quantity\": 2,\n      \"price\": 25.50\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/orders",
+            "description": "First item is missing quantity. API returns a customer-friendly validation error."
+          },
+          "response": [
+            {
+              "name": "422 Missing Item Quantity",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter how many units you need for each product.\",\n    \"details\": [\n      {\n        \"field\": \"items.0.quantity\",\n        \"message\": \"Please enter how many units you need for each product.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (Validation Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"\",\n  \"customer_email\": \"not-an-email\",\n  \"items\": []\n}"
+            },
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "422 Validation Failed",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"The given data was invalid. Please review the field errors below.\",\n    \"details\": [\n      {\n        \"field\": \"customer_name\",\n        \"message\": \"Please enter the customer's full name.\"\n      },\n      {\n        \"field\": \"customer_email\",\n        \"message\": \"Please enter a valid customer email address.\"\n      },\n      {\n        \"field\": \"items\",\n        \"message\": \"Please add at least one product to the order.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (Invalid Status)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Alice Smith\",\n  \"customer_email\": \"alice@example.com\",\n  \"status\": \"confirmed\",\n  \"items\": [\n    {\n      \"product_name\": \"Laptop\",\n      \"quantity\": 1,\n      \"price\": 999.99\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "422 Invalid Status on Create",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"New orders can only be created with pending status.\",\n    \"details\": [\n      {\n        \"field\": \"status\",\n        \"message\": \"New orders can only be created with pending status.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order (Unauthenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Alice Smith\",\n  \"customer_email\": \"alice@example.com\",\n  \"items\": [\n    {\n      \"product_name\": \"Laptop\",\n      \"quantity\": 1,\n      \"price\": 999.99\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"You are not signed in. Please log in or create an account to access this resource.\",\n    \"details\": [\n      {\n        \"field\": \"login\",\n        \"message\": \"Send a POST request to /api/v1/auth/login with your email and password.\"\n      },\n      {\n        \"field\": \"register\",\n        \"message\": \"If you do not have an account yet, use POST /api/v1/auth/register first.\"\n      },\n      {\n        \"field\": \"authorization\",\n        \"message\": \"After login, copy the token from the response and add this header: Authorization: Bearer {your-token}.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"customer_name\": \"Alice Smith\",\n    \"customer_email\": \"alice@example.com\",\n    \"status\": \"pending\",\n    \"total\": \"1050.99\",\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_name\": \"Laptop\",\n        \"quantity\": 1,\n        \"price\": \"999.99\",\n        \"subtotal\": \"999.99\"\n      },\n      {\n        \"id\": 2,\n        \"product_name\": \"Mouse\",\n        \"quantity\": 2,\n        \"price\": \"25.50\",\n        \"subtotal\": \"51.00\"\n      }\n    ],\n    \"payments_count\": 0,\n    \"created_at\": \"2026-06-26T13:17:52.000000Z\",\n    \"updated_at\": \"2026-06-26T13:17:52.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order (Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/99999",
+            "description": "Use a non-existent order ID or an order owned by another user."
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_NOT_FOUND\",\n    \"message\": \"Order not found.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order (Invalid ID Format)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/abc"
+          },
+          "response": [
+            {
+              "name": "404 Route Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ROUTE_NOT_FOUND\",\n    \"message\": \"The requested API endpoint does not exist.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order (Confirm)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"customer_name\": \"Alice Smith\",\n    \"customer_email\": \"alice@example.com\",\n    \"status\": \"confirmed\",\n    \"total\": \"1050.99\",\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_name\": \"Laptop\",\n        \"quantity\": 1,\n        \"price\": \"999.99\",\n        \"subtotal\": \"999.99\"\n      }\n    ],\n    \"payments_count\": 0,\n    \"created_at\": \"2026-06-26T13:17:52.000000Z\",\n    \"updated_at\": \"2026-06-26T13:18:10.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order (Invalid Status)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "422 Invalid Status",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Order status must be one of: pending, confirmed, or cancelled.\",\n    \"details\": [\n      {\n        \"field\": \"status\",\n        \"message\": \"Order status must be one of: pending, confirmed, or cancelled.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order (Empty Body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "422 Empty Update Body",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please provide at least one field to update.\",\n    \"details\": [\n      {\n        \"field\": \"body\",\n        \"message\": \"Please provide at least one field to update.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order (Not Found)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": "{{base_url}}/orders/99999"
+          },
+          "response": [
+            {
+              "name": "404 Order Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_NOT_FOUND\",\n    \"message\": \"Order not found.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order (Locked - Already Paid)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Updated Name\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}",
+            "description": "Use an order that already has a successful payment."
+          },
+          "response": [
+            {
+              "name": "422 Order Locked",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_LOCKED\",\n    \"message\": \"This order has been paid successfully and can no longer be modified.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Delete Order (Conflict - Has Payments)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "response": [
+            {
+              "name": "409 Conflict",
+              "status": "Conflict",
+              "code": 409,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_HAS_PAYMENTS\",\n    \"message\": \"Orders cannot be deleted if they have associated payments.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Process Payment (Credit Card)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\",\n  \"metadata\": {\n    \"card_number\": \"4242424242424242\"\n  }\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "201 Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"order_id\": 1,\n    \"status\": \"successful\",\n    \"payment_method\": \"credit_card\",\n    \"amount\": \"1050.99\",\n    \"gateway_reference\": \"cc_550e8400-e29b-41d4-a716-446655440000\",\n    \"failure_reason\": null,\n    \"created_at\": \"2026-06-26T13:20:00.000000Z\",\n    \"updated_at\": \"2026-06-26T13:20:00.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Order Already Paid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"paypal\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Send a second payment request after the order already has a successful payment."
+          },
+          "response": [
+            {
+              "name": "422 Order Already Paid",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_ALREADY_PAID\",\n    \"message\": \"This order has already been paid successfully. You cannot process another payment for it.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Credit Card - Simulated Decline)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\",\n  \"metadata\": {\n    \"card_number\": \"4111111111111111\"\n  }\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "201 Failed Payment Recorded",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"status\": \"failed\",\n    \"payment_method\": \"credit_card\",\n    \"failure_reason\": \"Credit card declined: amount exceeds limit for test card.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (PayPal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"paypal\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "201 Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"id\": 2,\n    \"order_id\": 1,\n    \"status\": \"successful\",\n    \"payment_method\": \"paypal\",\n    \"amount\": \"1050.99\",\n    \"gateway_reference\": \"pp_550e8400-e29b-41d4-a716-446655440001\",\n    \"failure_reason\": null,\n    \"created_at\": \"2026-06-26T13:21:00.000000Z\",\n    \"updated_at\": \"2026-06-26T13:21:00.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (PayPal - Simulated Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"paypal\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use an order whose customer_email contains fail@ (e.g. fail@example.com)."
+          },
+          "response": [
+            {
+              "name": "201 Failed Payment Recorded",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"status\": \"failed\",\n    \"payment_method\": \"paypal\",\n    \"failure_reason\": \"PayPal payment failed: payer account rejected.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Stripe - Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"stripe\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use a confirmed order whose total does NOT end in .99 (e.g. 100.00)."
+          },
+          "response": [
+            {
+              "name": "201 Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"id\": 3,\n    \"order_id\": 1,\n    \"status\": \"successful\",\n    \"payment_method\": \"stripe\",\n    \"amount\": \"100.00\",\n    \"gateway_reference\": \"st_550e8400-e29b-41d4-a716-446655440002\",\n    \"failure_reason\": null,\n    \"created_at\": \"2026-06-26T13:22:00.000000Z\",\n    \"updated_at\": \"2026-06-26T13:22:00.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Stripe - Simulated Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"stripe\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use a confirmed order whose total ends in .99 (e.g. 19.99)."
+          },
+          "response": [
+            {
+              "name": "201 Failed Payment Recorded",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"data\": {\n    \"status\": \"failed\",\n    \"payment_method\": \"stripe\",\n    \"failure_reason\": \"Stripe payment failed: simulated decline for amounts ending in .99.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Missing Card Number)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use a confirmed order."
+          },
+          "response": [
+            {
+              "name": "422 Missing Card Number",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter a card number when paying with credit card.\",\n    \"details\": [\n      {\n        \"field\": \"metadata.card_number\",\n        \"message\": \"Please enter a card number when paying with credit card.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Missing Payment Method)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "422 Missing Payment Method",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please select a payment method.\",\n    \"details\": [\n      {\n        \"field\": \"payment_method\",\n        \"message\": \"Please select a payment method.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Invalid Payment Method)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"bitcoin\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "422 Invalid Payment Method",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"The selected payment method is not supported. Use credit_card, paypal, or stripe.\",\n    \"details\": [\n      {\n        \"field\": \"payment_method\",\n        \"message\": \"The selected payment method is not supported. Use credit_card, paypal, or stripe.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Invalid Card Number)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\",\n  \"metadata\": {\n    \"card_number\": \"not-a-card\"\n  }\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use a confirmed order."
+          },
+          "response": [
+            {
+              "name": "422 Invalid Card Number",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Please enter a valid card number (13 to 19 digits).\",\n    \"details\": [\n      {\n        \"field\": \"metadata.card_number\",\n        \"message\": \"Please enter a valid card number (13 to 19 digits).\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Unsupported Metadata Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"paypal\",\n  \"metadata\": {\n    \"cvv\": \"123\"\n  }\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments",
+            "description": "Use a confirmed order."
+          },
+          "response": [
+            {
+              "name": "422 Unsupported Metadata Key",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Payment metadata contains an unsupported field: cvv. Only card_number is allowed.\",\n    \"details\": [\n      {\n        \"field\": \"metadata\",\n        \"message\": \"Payment metadata contains an unsupported field: cvv. Only card_number is allowed.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Order Not Confirmed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\"\n}"
+            },
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "422 Order Not Confirmed",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_NOT_CONFIRMED\",\n    \"message\": \"Payments can only be processed for confirmed orders.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Order Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"credit_card\"\n}"
+            },
+            "url": "{{base_url}}/orders/99999/payments"
+          },
+          "response": [
+            {
+              "name": "404 Order Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_NOT_FOUND\",\n    \"message\": \"Order not found.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Payments For Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/{{order_id}}/payments"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"order_id\": 1,\n      \"status\": \"successful\",\n      \"payment_method\": \"credit_card\",\n      \"amount\": \"1050.99\",\n      \"gateway_reference\": \"cc_550e8400-e29b-41d4-a716-446655440000\",\n      \"failure_reason\": null,\n      \"created_at\": \"2026-06-26T13:20:00.000000Z\",\n      \"updated_at\": \"2026-06-26T13:20:00.000000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Payments For Order (Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/orders/99999/payments",
+            "description": "Use a non-existent order ID or an order owned by another user."
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ORDER_NOT_FOUND\",\n    \"message\": \"Order not found.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List All Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/payments?per_page=15"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"order_id\": 1,\n      \"status\": \"successful\",\n      \"payment_method\": \"credit_card\",\n      \"amount\": \"1050.99\",\n      \"gateway_reference\": \"cc_550e8400-e29b-41d4-a716-446655440000\",\n      \"failure_reason\": null,\n      \"order\": {\n        \"id\": 1,\n        \"customer_name\": \"Alice Smith\",\n        \"customer_email\": \"alice@example.com\",\n        \"status\": \"confirmed\",\n        \"total\": \"1050.99\"\n      },\n      \"created_at\": \"2026-06-26T13:20:00.000000Z\",\n      \"updated_at\": \"2026-06-26T13:20:00.000000Z\"\n    }\n  ],\n  \"links\": {\n    \"first\": \"http://localhost:8000/api/v1/payments?page=1\",\n    \"last\": \"http://localhost:8000/api/v1/payments?page=1\",\n    \"prev\": [],\n    \"next\": []\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"from\": 1,\n    \"last_page\": 1,\n    \"path\": \"http://localhost:8000/api/v1/payments\",\n    \"per_page\": 15,\n    \"to\": 1,\n    \"total\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List All Payments (Invalid per_page)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/payments?per_page=101"
+          },
+          "response": [
+            {
+              "name": "422 Invalid per_page",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"Results per page cannot exceed 100.\",\n    \"details\": [\n      {\n        \"field\": \"per_page\",\n        \"message\": \"Results per page cannot exceed 100.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List All Payments (Unauthenticated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/payments"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"You are not signed in. Please log in or create an account to access this resource.\",\n    \"details\": [\n      {\n        \"field\": \"login\",\n        \"message\": \"Send a POST request to /api/v1/auth/login with your email and password.\"\n      },\n      {\n        \"field\": \"register\",\n        \"message\": \"If you do not have an account yet, use POST /api/v1/auth/register first.\"\n      },\n      {\n        \"field\": \"authorization\",\n        \"message\": \"After login, copy the token from the response and add this header: Authorization: Bearer {your-token}.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Common Errors",
+      "item": [
+        {
+          "name": "Unknown Route",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/does-not-exist"
+          },
+          "response": [
+            {
+              "name": "404 Route Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"error\": {\n    \"code\": \"ROUTE_NOT_FOUND\",\n    \"message\": \"The requested API endpoint does not exist.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-token"
+              }
+            ],
+            "url": "{{base_url}}/orders"
+          },
+          "response": [
+            {
+              "name": "401 Token Invalid",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"You are not signed in. Please log in or create an account to access this resource.\",\n    \"details\": [\n      {\n        \"field\": \"login\",\n        \"message\": \"Send a POST request to /api/v1/auth/login with your email and password.\"\n      },\n      {\n        \"field\": \"register\",\n        \"message\": \"If you do not have an account yet, use POST /api/v1/auth/register first.\"\n      },\n      {\n        \"field\": \"authorization\",\n        \"message\": \"After login, copy the token from the response and add this header: Authorization: Bearer {your-token}.\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register (Rate Limited)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane2@example.com\",\n  \"password\": \"Password1\",\n  \"password_confirmation\": \"Password1\"\n}"
+            },
+            "url": "{{base_url}}/auth/register",
+            "description": "Send more than 5 register requests per minute from the same IP to trigger rate limiting."
+          },
+          "response": [
+            {
+              "name": "429 Too Many Requests",
+              "status": "Too Many Requests",
+              "code": 429,
+              "body": "{\n  \"error\": {\n    \"code\": \"TOO_MANY_REQUESTS\",\n    \"message\": \"Too many requests. Please slow down and try again later.\",\n    \"details\": []\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
